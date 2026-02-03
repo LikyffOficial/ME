@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Poly-Engineer: Structure Master</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+
+        :root {
+            --bg-color: #0b0c10;
+            --grid-line: rgba(69, 162, 158, 0.1);
+            --accent: #66fcf1; /* Ciano Neon */
+            --accent-dim: #45a29e;
+            --danger: #ff1e56;
+            --success: #c5c6c7;
+            --glass: rgba(11, 12, 16, 0.85);
+            --font-main: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--accent);
+            font-family: var(--font-main);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- UI LAYER --- */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        /* Top Bar */
+        .hud-panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--accent-dim);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .stat-group { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.75rem; letter-spacing: 2px; color: #888; text-transform: uppercase; }
+        .stat-value { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.4);
+        }
+
+        /* Bottom Controls */
+        .controls-area {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            pointer-events: auto;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        }
+
+        /* Buttons */
+        button {
+            font-family: var(--font-main);
+            background: rgba(0,0,0,0.4);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        button:hover {
+            background: var(--accent);
+            color: #0b0c10;
+            box-shadow: 0 0 20px var(--accent-dim);
+            transform: translateY(-2px);
+        }
+
+        button:active { transform: scale(0.95); }
+
+        button.danger { 
+            border-color: var(--danger); 
+            color: var(--danger); 
+        }
+        button.danger:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 0 20px var(--danger);
+        }
+
+        /* Overlay Messages */
+        #message-box {
+            position: absolute;
+            top: 20%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 30, 86, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-shadow: 0 0 10px var(--danger);
+            z-index: 20;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 12, 16, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--accent);
+        }
+
+        .start-btn {
+            margin-top: 30px;
+            padding: 20px 60px;
+            font-size: 1.5rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(102, 252, 241, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(102, 252, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(102, 252, 241, 0); }
+        }
+
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+<audio id="bgm" loop>
+    <source src="bdg.mp3" type="audio/mpeg">
+    </audio>
+
+<div id="start-screen">
+    <h1>Poly-Structure</h1>
+    <p style="color: #888;">PROTOCOLO DE ENGENHARIA V.3.0</p>
+    <button class="start-btn" onclick="startGame()">INICIAR SISTEMA</button>
+</div>
+
+<div id="ui-layer">
+    <div class="hud-panel">
+        <div class="stat-group">
+            <span class="stat-label">ORÇAMENTO</span>
+            <span id="money-display" class="stat-value">$100.00</span>
+        </div>
+        <div class="stat-group" style="text-align: right;">
+            <span class="stat-label">SISTEMA</span>
+            <span id="status-display" style="color:var(--accent);">ONLINE</span>
+        </div>
+    </div>
+
+    <div id="message-box">FUNDO INSUFICIENTE</div>
+
+    <div class="controls-area">
+        <button onclick="resetGame()" class="danger">ABORTAR</button>
+        <button onclick="toggleSim()" id="btn-sim">SIMULAR</button>
+    </div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+    // --- SETUP GERAL ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const moneyDisplay = document.getElementById('money-display');
+    const statusDisplay = document.getElementById('status-display');
+    const msgBox = document.getElementById('message-box');
+    const audio = document.getElementById('bgm');
+
+    // Constantes Físicas & Econômicas
+    const PPM = 40; 
+    const GRAVITY = 9.81;
+    const STARTING_MONEY = 100;
+    const COST_PER_METER = 5; 
+    const SNAP_DIST = 35; // Área de toque aumentada
+
+    // Variáveis de Estado
+    let width, height;
+    let nodes = [];
+    let links = [];
+    let simulating = false;
+    let loadFactor = 0;
+    let currentMoney = STARTING_MONEY;
+    let dragStart = null;
+    let currentPos = {x:0, y:0};
+    let isDragging = false;
+    let gameStarted = false;
+
+    // --- CLASSES COM VISUAL MELHORADO ---
+    class Node {
+        constructor(x, y, fixed) {
+            this.x = x; this.y = y;
+            this.oldX = x; this.oldY = y;
+            this.iniX = x; this.iniY = y;
+            this.fixed = fixed;
+        }
+        
+        update() {
+            if(this.fixed) return;
+            const vx = (this.x - this.oldX) * 0.98;
+            const vy = (this.y - this.oldY) * 0.98;
+            this.oldX = this.x; this.oldY = this.y;
+            this.x += vx; this.y += vy;
+            // Gravidade suavizada
+            this.y += (GRAVITY * PPM * 0.00028) * loadFactor; 
+        }
+
+        draw(isActive) {
+            // Brilho do Nó
+            ctx.shadowBlur = isActive ? 15 : 0;
+            ctx.shadowColor = 'var(--accent)';
+            
+            ctx.beginPath();
+            if(this.fixed) {
+                // Design de Âncora (Parafuso Hexagonal)
+                ctx.fillStyle = '#ff1e56';
+                drawHexagon(ctx, this.x, this.y, 8);
+            } else {
+                // Design de Junta (Círculo Tech)
+                ctx.fillStyle = isActive ? '#ffffff' : '#45a29e';
+                ctx.arc(this.x, this.y, isActive ? 6 : 4, 0, Math.PI*2);
+            }
+            ctx.fill();
+            
+            // Reset Shadow para performance
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    class Link {
+        constructor(a, b) {
+            this.a = a; this.b = b;
+            this.rest = Math.hypot(b.x - a.x, b.y - a.y);
+            this.stress = 0;
+            this.broken = false;
+        }
+
+        update() {
+            if(this.broken) return;
+            const dx = this.b.x - this.a.x;
+            const dy = this.b.y - this.a.y;
+            const d = Math.hypot(dx, dy);
+            const diff = (d - this.rest) / this.rest;
+            this.stress = diff;
+
+            if(Math.abs(diff) > 0.20) this.broken = true; 
+
+            const k = 0.5 * diff;
+            const ox = dx * k;
+            const oy = dy * k;
+
+            if(!this.a.fixed) { this.a.x += ox; this.a.y += oy; }
+            if(!this.b.fixed) { this.b.x -= ox; this.b.y -= oy; }
+        }
+
+        draw() {
+            if(this.broken) return;
+            
+            // Visualização de Stress Neon
+            let color = '#45a29e'; // Base Cyan
+            let alpha = 0.6;
+            let width = 3;
+            let shadowColor = 'transparent';
+            let shadowBlur = 0;
+
+            if(simulating) {
+                const s = this.stress;
+                const absS = Math.abs(s);
+                
+                if(s > 0) { // Tração (Esticando - Azul/Branco)
+                    const intensity = Math.min(absS * 5, 1);
+                    color = `rgba(${100 + 155*intensity}, 252, 241, ${0.6 + 0.4*intensity})`;
+                    width = 2;
+                } else { // Compressão (Esmagando - Vermelho/Laranja)
+                    const intensity = Math.min(absS * 5, 1);
+                    color = `rgba(255, ${255 * (1-intensity)}, 86, ${0.8 + 0.2*intensity})`;
+                    width = 3 + intensity * 3;
+                    
+                    if(intensity > 0.8) { // Warning Glow
+                        shadowColor = '#ff1e56';
+                        shadowBlur = 15;
+                    }
+                }
+            }
+
+            ctx.save();
+            ctx.shadowBlur = shadowBlur;
+            ctx.shadowColor = shadowColor;
+            ctx.beginPath();
+            ctx.moveTo(this.a.x, this.a.y);
+            ctx.lineTo(this.b.x, this.b.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    // --- FUNÇÕES AUXILIARES DE DESENHO ---
+    function drawHexagon(ctx, x, y, r) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            ctx.lineTo(x + r * Math.cos(i * Math.PI / 3), y + r * Math.sin(i * Math.PI / 3));
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    function drawGrid() {
+        // Grid Tecnológico de Fundo
+        ctx.strokeStyle = 'rgba(69, 162, 158, 0.05)';
+        ctx.lineWidth = 1;
+        
+        // Movimento sutil do grid (Opcional, mas bonito)
+        const offset = (Date.now() / 50) % 40; 
+        
+        ctx.beginPath();
+        for(let x = 0; x < width; x += 40) {
+            ctx.moveTo(x, 0); ctx.lineTo(x, height);
+        }
+        for(let y = 0; y < height; y += 40) {
+            ctx.moveTo(0, y); ctx.lineTo(width, y);
+        }
+        ctx.stroke();
+    }
+
+    // --- SISTEMA ---
+    function startGame() {
+        const screen = document.getElementById('start-screen');
+        screen.style.opacity = '0';
+        setTimeout(() => screen.style.display = 'none', 500);
+        gameStarted = true;
+        
+        // Iniciar Audio (Requer interação do usuário)
+        audio.volume = 0.5; // 50% volume
+        audio.play().catch(e => console.log("Audio play failed:", e));
+        
+        init();
+    }
+
+    function init() {
+        resize();
+        window.addEventListener('resize', resize);
+        document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        resetGame();
+        loop();
+    }
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        if(!simulating && gameStarted) resetGame();
+    }
+
+    function resetGame() {
+        simulating = false;
+        loadFactor = 0;
+        currentMoney = STARTING_MONEY;
+        nodes = [];
+        links = [];
+        updateUI();
+
+        // Cenário Responsivo
+        const gap = Math.min(width * 0.6, 500);
+        const cx = width / 2;
+        const cy = height / 2;
+        
+        nodes.push(new Node(cx - gap/2, cy + 60, true));
+        nodes.push(new Node(cx - gap/2, cy - 60, true));
+        
+        nodes.push(new Node(cx + gap/2, cy + 60, true));
+        nodes.push(new Node(cx + gap/2, cy - 60, true));
+    }
+
+    function updateUI() {
+        moneyDisplay.innerText = "$" + currentMoney.toFixed(2);
+        
+        const btn = document.getElementById('btn-sim');
+        if(simulating) {
+            btn.innerText = "PARAR";
+            btn.classList.add('danger');
+            statusDisplay.innerText = "TESTANDO...";
+            statusDisplay.style.color = "var(--danger)";
+        } else {
+            btn.innerText = "SIMULAR";
+            btn.classList.remove('danger');
+            statusDisplay.innerText = "ONLINE";
+            statusDisplay.style.color = "var(--accent)";
+        }
+    }
+
+    // --- INPUT (TOUCH/MOUSE) ---
+    function getClosest(x, y) {
+        let best = null;
+        let min = SNAP_DIST;
+        for(let n of nodes) {
+            let d = Math.hypot(n.x - x, n.y - y);
+            if(d < min) { min = d; best = n; }
+        }
+        return best;
+    }
+
+    function handleStart(x, y) {
+        if(simulating) return;
+        const snap = getClosest(x, y);
+        if(snap) {
+            dragStart = snap;
+            isDragging = true;
+            currentPos = {x, y};
+        }
+    }
+
+    function handleMove(x, y) {
+        currentPos = {x, y};
+        const snap = getClosest(x, y);
+        if(snap) currentPos = {x: snap.x, y: snap.y};
+    }
+
+    function handleEnd() {
+        if(!isDragging || !dragStart) { isDragging = false; return; }
+        
+        let endNode = getClosest(currentPos.x, currentPos.y);
+        
+        if(!endNode) {
+            endNode = new Node(currentPos.x, currentPos.y, false);
+        }
+
+        const dist = Math.hypot(endNode.x - dragStart.x, endNode.y - dragStart.y);
+        const distM = dist / PPM;
+        const cost = distM * COST_PER_METER;
+
+        if(dist > 10 && distM < 6 && dragStart !== endNode) {
+            if(currentMoney >= cost) {
+                if(!nodes.includes(endNode)) nodes.push(endNode);
+                
+                const exists = links.some(l => (l.a === dragStart && l.b === endNode) || (l.a === endNode && l.b === dragStart));
+                
+                if(!exists) {
+                    links.push(new Link(dragStart, endNode));
+                    currentMoney -= cost;
+                }
+            } else {
+                showMsg();
+            }
+        }
+        
+        updateUI();
+        isDragging = false;
+        dragStart = null;
+    }
+
+    function showMsg() {
+        msgBox.style.opacity = '1';
+        msgBox.style.top = '20%'; // leve animação
+        setTimeout(() => {
+            msgBox.style.opacity = '0';
+        }, 1500);
+    }
+
+    // Event Listeners
+    canvas.addEventListener('mousedown', e => handleStart(e.clientX, e.clientY));
+    canvas.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+    canvas.addEventListener('mouseup', handleEnd);
+
+    canvas.addEventListener('touchstart', e => handleStart(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
+    canvas.addEventListener('touchmove', e => handleMove(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
+    canvas.addEventListener('touchend', handleEnd);
+
+    // --- GAME LOOP ---
+    function toggleSim() {
+        if(!simulating) {
+            // Save state
+            nodes.forEach(n => { n.iniX = n.x; n.iniY = n.y; n.oldX = n.x; n.oldY = n.y; });
+            simulating = true;
+            loadFactor = 0;
+        } else {
+            // Restore state
+            simulating = false;
+            nodes.forEach(n => { n.x = n.oldX = n.iniX; n.y = n.oldY = n.iniY; });
+            links.forEach(l => { l.broken = false; l.stress = 0; });
+        }
+        updateUI();
+    }
+
+    function loop() {
+        if(!gameStarted) return; // Espera clicar no Start
+
+        // Limpa com transparência para efeito de rastro leve (opcional) ou sólido
+        ctx.fillStyle = '#0b0c10'; 
+        ctx.fillRect(0,0,width,height);
+        
+        drawGrid();
+
+        // Terreno (Design Clean)
+        if(nodes.length > 0) {
+            ctx.fillStyle = '#1f2833';
+            const leftX = nodes[0].x; 
+            const rightX = nodes[2].x;
+            
+            // Penhascos
+            ctx.fillRect(0, 0, leftX, height);
+            ctx.fillRect(rightX, 0, width-rightX, height);
+            
+            // Linha de Borda Neon
+            ctx.strokeStyle = 'var(--accent-dim)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(leftX, 0); ctx.lineTo(leftX, height);
+            ctx.moveTo(rightX, 0); ctx.lineTo(rightX, height);
+            ctx.stroke();
+        }
+
+        // Simulação Física
+        if(simulating) {
+            if(loadFactor < 1) loadFactor += 0.005;
+            for(let i=0; i<10; i++) {
+                links.forEach(l => l.update());
+                nodes.forEach(n => n.update());
+            }
+        }
+
+        // Renderização
+        links.forEach(l => l.draw());
+        
+        // Preview da Linha
+        if(isDragging && dragStart) {
+            const dist = Math.hypot(dragStart.x - currentPos.x, dragStart.y - currentPos.y);
+            const distM = dist / PPM;
+            const cost = distM * COST_PER_METER;
+            const canAfford = currentMoney >= cost;
+
+            ctx.beginPath();
+            ctx.moveTo(dragStart.x, dragStart.y);
+            ctx.lineTo(currentPos.x, currentPos.y);
+            ctx.strokeStyle = canAfford ? 'var(--accent)' : 'var(--danger)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Custo flutuante (Estilo HUD)
+            ctx.fillStyle = canAfford ? '#fff' : 'var(--danger)';
+            ctx.font = "bold 14px 'Rajdhani', sans-serif";
+            ctx.fillText(`$${cost.toFixed(2)}`, currentPos.x + 15, currentPos.y - 15);
+        }
+
+        nodes.forEach(n => {
+            const isActive = (n === dragStart) || 
+                             (Math.hypot(n.x - currentPos.x, n.y - currentPos.y) < SNAP_DIST);
+            n.draw(isActive);
+        });
+
+        requestAnimationFrame(loop);
+    }
+</script>
+</body>
+</html>
