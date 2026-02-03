@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poly-Structure: Campaign Mode</title>
+    <title>Poly-Structure: World Builder</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
 
@@ -13,7 +13,7 @@
             --accent-dim: #45a29e;
             --danger: #ff1e56;
             --success: #00e676;
-            --glass: rgba(11, 12, 16, 0.9);
+            --glass: rgba(11, 12, 16, 0.95);
             --font-main: 'Rajdhani', sans-serif;
         }
 
@@ -27,14 +27,11 @@
             user-select: none;
         }
 
-        /* --- UI ELEMENTS --- */
+        /* --- UI LAYOUT --- */
         #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            display: flex; flex-direction: column; justify-content: space-between;
             z-index: 10;
         }
 
@@ -42,36 +39,22 @@
             background: var(--glass);
             border-bottom: 1px solid var(--accent-dim);
             padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: auto;
-            backdrop-filter: blur(5px);
-        }
-
-        .level-badge {
-            background: var(--accent);
-            color: #000;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-            display: inline-block;
+            display: flex; justify-content: space-between; align-items: center;
+            pointer-events: auto; backdrop-filter: blur(5px);
         }
 
         .stat-value { font-size: 1.4rem; font-weight: 700; text-shadow: 0 0 10px rgba(102, 252, 241, 0.3); }
-        .stat-label { font-size: 0.7rem; color: #888; letter-spacing: 1px; }
+        .stat-label { font-size: 0.7rem; color: #888; letter-spacing: 1px; display: block; }
+        .mode-badge { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
 
         .controls {
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
+            display: flex; justify-content: center; gap: 15px; align-items: flex-end;
             pointer-events: auto;
             background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
         }
 
+        /* BUTTONS */
         button {
             font-family: var(--font-main);
             background: rgba(0,0,0,0.6);
@@ -89,40 +72,49 @@
         button:active { transform: scale(0.95); }
         button.danger { border-color: var(--danger); color: var(--danger); }
         button.danger:hover { background: var(--danger); color: white; }
+        
+        /* Small Round Buttons (Undo/Save) */
+        .icon-btn {
+            width: 50px; height: 50px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            clip-path: none; /* Override polygon */
+            border: 2px solid var(--accent-dim);
+        }
 
-        /* SCREENS & MODALS */
+        /* SCREENS */
         .overlay-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 12, 16, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 100;
             transition: opacity 0.5s;
         }
         
-        .title { font-size: 3rem; margin: 0; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); }
-        .subtitle { color: #888; margin-top: 5px; letter-spacing: 2px; }
-        
-        #victory-modal {
-            display: none;
-            background: rgba(0, 230, 118, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        .victory-text { color: var(--success); font-size: 2.5rem; text-shadow: 0 0 20px var(--success); }
-        
-        #timer-bar {
-            width: 0%; height: 4px;
-            background: var(--success);
-            position: absolute;
-            top: 0; left: 0;
-            transition: width 0.1s linear;
-        }
+        .hidden { display: none !important; }
 
-        /* Message Toast */
+        .title { font-size: 3rem; margin: 0; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); text-align: center; }
+        .subtitle { color: #888; margin-top: 5px; letter-spacing: 2px; margin-bottom: 40px; }
+        
+        .menu-btn { width: 250px; margin: 10px 0; padding: 20px; font-size: 1.2rem; }
+        
+        /* Save Slots */
+        .slot-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .slot-card {
+            border: 1px solid var(--accent-dim);
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            width: 150px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .slot-card:hover { background: var(--accent-dim); color: #000; }
+        .slot-info { font-size: 0.8rem; margin-top: 5px; color: #888; }
+
+        /* Toast & Modals */
         #toast {
             position: absolute; top: 20%; left: 50%;
             transform: translate(-50%, -50%);
@@ -134,36 +126,65 @@
             transition: opacity 0.3s;
             font-weight: bold;
         }
+        
+        #victory-modal { background: rgba(0, 230, 118, 0.1); backdrop-filter: blur(10px); }
+        .victory-text { color: var(--success); font-size: 2.5rem; text-shadow: 0 0 20px var(--success); }
+        
+        #timer-bar { width: 0%; height: 4px; background: var(--success); position: absolute; top: 0; left: 0; }
 
         canvas { display: block; }
     </style>
 </head>
 <body>
 
-<audio id="bgm" loop>
-    <source src="bdg.mp3" type="audio/mpeg">
-</audio>
+<audio id="bgm" loop><source src="bdg.mp3" type="audio/mpeg"></audio>
 
 <div id="start-screen" class="overlay-screen">
     <h1 class="title">POLY-STRUCTURE</h1>
-    <p class="subtitle">CAMPAIGN MODE V1.0</p>
-    <div style="margin-top: 40px; font-size: 0.9rem; color: #666;">
-        🎧 Áudio Híbrido: MP3 ou Sintetizador Neural
+    <p class="subtitle">ENGINEERING SIMULATOR</p>
+    <button class="menu-btn" onclick="goToModeSelect()">INICIAR SISTEMA</button>
+</div>
+
+<div id="mode-screen" class="overlay-screen hidden">
+    <h1 class="title">SELECIONE O MODO</h1>
+    <button class="menu-btn" onclick="startCampaign()">MODO CAMPANHA</button>
+    <div style="font-size: 0.8rem; color: #666; margin-bottom: 20px;">Fases com orçamento e objetivos.</div>
+    
+    <button class="menu-btn" onclick="goToSlots()">MODO LIVRE</button>
+    <div style="font-size: 0.8rem; color: #666;">Dinheiro infinito + Salvar Mundos.</div>
+</div>
+
+<div id="slot-screen" class="overlay-screen hidden">
+    <h1 class="title">BANCO DE DADOS</h1>
+    <p class="subtitle">Carregar ou Criar Novo Mundo</p>
+    <div class="slot-container">
+        <div class="slot-card" onclick="loadSandbox(1)">
+            <h3>SLOT 1</h3>
+            <div id="slot-1-info" class="slot-info">Vazio</div>
+        </div>
+        <div class="slot-card" onclick="loadSandbox(2)">
+            <h3>SLOT 2</h3>
+            <div id="slot-2-info" class="slot-info">Vazio</div>
+        </div>
+        <div class="slot-card" onclick="loadSandbox(3)">
+            <h3>SLOT 3</h3>
+            <div id="slot-3-info" class="slot-info">Vazio</div>
+        </div>
     </div>
-    <button onclick="startGame()" style="margin-top: 20px; width: 200px;">INICIAR SISTEMA</button>
+    <button onclick="backToModes()" style="margin-top: 30px; font-size: 0.8rem;">VOLTAR</button>
 </div>
 
-<div id="victory-modal" class="overlay-screen">
-    <h1 class="victory-text">ESTRUTURA ESTÁVEL</h1>
-    <p style="color: #fff; margin-bottom: 30px;">Teste de carga aprovado.</p>
-    <button onclick="nextLevel()" style="border-color: var(--success); color: var(--success);">PRÓXIMO NÍVEL >></button>
+<div id="victory-modal" class="overlay-screen hidden">
+    <h1 class="victory-text">SUCESSO</h1>
+    <p>Estrutura Estável.</p>
+    <button onclick="nextLevel()">PRÓXIMO NÍVEL >></button>
 </div>
 
-<div id="ui-layer">
+<div id="ui-layer" class="hidden">
     <div class="hud-top">
         <div>
-            <div id="level-display" class="level-badge">NÍVEL 1</div>
-            <div class="stat-label">OBJETIVO: <span id="objective-text" style="color:#fff">Vencer o vão</span></div>
+            <div id="mode-badge" class="mode-badge">CAMPAIGN</div>
+            <div class="stat-label" id="objective-text">Objetivo: Vencer o vão</div>
         </div>
         <div style="text-align: right;">
             <div class="stat-value" id="money-display">$0</div>
@@ -175,114 +196,68 @@
     <div id="toast">FUNDOS INSUFICIENTES</div>
 
     <div class="controls">
-        <button onclick="resetLevel()" class="danger">RESET</button>
+        <button class="icon-btn" onclick="undoLast()" title="Desfazer">↩</button>
+        
+        <button onclick="resetLevel()" class="danger">LIMPAR</button>
         <button onclick="toggleSim()" id="btn-sim">SIMULAR</button>
+        
+        <button id="btn-save" class="icon-btn hidden" onclick="saveWorld()" title="Salvar Mundo">💾</button>
     </div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
-    // --- ENGINE DE ÁUDIO SINTÉTICO (Fallback) ---
-    // Se o MP3 não carregar, isso cria um som ambiente Sci-Fi usando o chip de som do navegador
+    // --- ENGINE DE ÁUDIO ---
     class AudioEngine {
         constructor() {
             this.ctx = window.AudioContext ? new AudioContext() : null;
-            this.oscillators = [];
             this.mp3Element = document.getElementById('bgm');
-            this.usingSynth = false;
         }
-
         start() {
             if (!this.ctx) return;
-            
-            // Tenta tocar o MP3 primeiro
             this.mp3Element.volume = 0.4;
-            let playPromise = this.mp3Element.play();
-
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.warn("MP3 falhou (provavelmente caminho local). Iniciando Sintetizador...");
-                    this.startSynth();
-                });
-            }
+            this.mp3Element.play().catch(() => this.startSynth());
         }
-
         startSynth() {
-            this.usingSynth = true;
-            // Drone grave (Pad)
-            this.createOscillator(55, 'sawtooth', 0.05); 
-            this.createOscillator(56, 'sine', 0.1); 
-            // Som agudo etéreo
-            this.createOscillator(220, 'sine', 0.02);
-            
-            // LFO para movimento
-            console.log("Audio Sintético Ativo");
-        }
-
-        createOscillator(freq, type, vol) {
+            // Fallback procedural simples se MP3 falhar
             const osc = this.ctx.createOscillator();
-            const gainNode = this.ctx.createGain();
-            
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            
-            gainNode.gain.setValueAtTime(vol, this.ctx.currentTime);
-            
-            osc.connect(gainNode);
-            gainNode.connect(this.ctx.destination);
-            osc.start();
-            this.oscillators.push(osc);
+            const gain = this.ctx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+            gain.gain.value = 0.05;
+            osc.connect(gain); gain.connect(this.ctx.destination); osc.start();
         }
     }
 
-    // --- CONFIGURAÇÃO DE FASES ---
+    // --- CONFIGURAÇÃO ---
     const LEVELS = [
-        {
-            id: 1,
-            name: "NÍVEL 1: O INÍCIO",
-            budget: 150,
-            gapWidth: 300,
-            heightDiff: 0, // Chão plano
-            desc: "Construa uma ponte simples para cruzar o vão."
-        },
-        {
-            id: 2,
-            name: "NÍVEL 2: O CANYON",
-            budget: 400,
-            gapWidth: 500, // Vão largo
-            heightDiff: 0,
-            desc: "O vão é maior. Use treliças (triângulos) para suporte."
-        },
-        {
-            id: 3,
-            name: "NÍVEL 3: A FALHA",
-            budget: 600,
-            gapWidth: 400,
-            heightDiff: 80, // Lado direito mais baixo
-            desc: "Terreno desnivelado. Adapte a estrutura."
-        }
+        { id: 1, name: "NÍVEL 1", budget: 150, gap: 300, dy: 0, desc: "Cruze o vão simples." },
+        { id: 2, name: "NÍVEL 2", budget: 400, gap: 500, dy: 0, desc: "Vão largo. Use treliças." },
+        { id: 3, name: "NÍVEL 3", budget: 600, gap: 400, dy: 100, desc: "Terreno desnivelado." }
     ];
 
-    // --- VARIÁVEIS DO JOGO ---
     const PPM = 40; 
     const GRAVITY = 9.81;
     const COST_PER_METER = 5;
     const SNAP_DIST = 30;
-    
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const audioSys = new AudioEngine();
 
-    let currentLevelIdx = 0;
+    // Estado do Jogo
     let width, height;
     let nodes = [];
     let links = [];
     let simulating = false;
     let loadFactor = 0;
     let currentMoney = 0;
-    let survivalTime = 0; // Tempo que a estrutura aguentou
-    const TARGET_TIME = 300; // 5 segundos (60 frames * 5)
+    let survivalTime = 0;
+    
+    // Modos
+    let isSandbox = false;
+    let currentSlot = 0;
+    let currentLevelIdx = 0;
 
     // Input
     let dragStart = null;
@@ -309,7 +284,7 @@
             ctx.beginPath();
             if(this.fixed) {
                 ctx.fillStyle = '#ff1e56';
-                ctx.fillRect(this.x-6, this.y-6, 12, 12); // Quadrado
+                ctx.fillRect(this.x-6, this.y-6, 12, 12);
             } else {
                 ctx.fillStyle = active ? '#fff' : '#45a29e';
                 ctx.arc(this.x, this.y, 5, 0, Math.PI*2);
@@ -332,121 +307,229 @@
             const d = Math.hypot(dx, dy);
             const diff = (d - this.rest) / this.rest;
             this.stress = diff;
-
-            // Quebra com 25% de deformação
             if(Math.abs(diff) > 0.25) this.broken = true; 
-
             const k = 0.5 * diff; 
-            const ox = dx * k;
-            const oy = dy * k;
-
-            if(!this.a.fixed) { this.a.x += ox; this.a.y += oy; }
-            if(!this.b.fixed) { this.b.x -= ox; this.b.y -= oy; }
+            if(!this.a.fixed) { this.a.x += dx*k; this.a.y += dy*k; }
+            if(!this.b.fixed) { this.b.x -= dx*k; this.b.y -= dy*k; }
         }
         draw() {
             if(this.broken) return;
-            
             let color = '#45a29e';
             let lw = 2;
-            
             if(simulating) {
-                if(this.stress > 0) { // Tração
-                    color = `rgba(100, 255, 255, ${0.5 + this.stress*2})`;
-                } else { // Compressão
+                if(this.stress > 0) color = `rgba(100, 255, 255, ${0.5 + this.stress*2})`;
+                else {
                     let red = Math.min(255, Math.abs(this.stress) * 1000);
                     color = `rgb(255, ${255-red}, 100)`;
                     lw = 2 + Math.abs(this.stress)*10;
                 }
             }
-            
-            ctx.beginPath();
-            ctx.moveTo(this.a.x, this.a.y);
-            ctx.lineTo(this.b.x, this.b.y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lw;
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(this.a.x, this.a.y); ctx.lineTo(this.b.x, this.b.y);
+            ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
         }
     }
 
-    // --- GAMEPLAY FLOW ---
+    // --- NAVEGAÇÃO DE MENUS ---
 
-    function startGame() {
-        document.getElementById('start-screen').style.display = 'none';
+    function goToModeSelect() {
         audioSys.start();
-        init();
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('mode-screen').classList.remove('hidden');
     }
 
-    function init() {
-        resize();
-        window.addEventListener('resize', resize);
-        // Prevenir scroll mobile
-        document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    function backToModes() {
+        document.getElementById('slot-screen').classList.add('hidden');
+        document.getElementById('mode-screen').classList.remove('hidden');
+    }
+
+    function startCampaign() {
+        isSandbox = false;
+        document.getElementById('mode-screen').classList.add('hidden');
+        document.getElementById('ui-layer').classList.remove('hidden');
+        document.getElementById('btn-save').classList.add('hidden'); // Hide Save
+        initGame();
         loadLevel(0);
-        loop();
     }
 
-    function loadLevel(idx) {
-        if(idx >= LEVELS.length) idx = 0; // Loop ou tela final
-        currentLevelIdx = idx;
-        const lvl = LEVELS[idx];
+    function goToSlots() {
+        document.getElementById('mode-screen').classList.add('hidden');
+        document.getElementById('slot-screen').classList.remove('hidden');
+        updateSlotInfo();
+    }
 
-        // UI Updates
-        document.getElementById('level-display').innerText = lvl.name;
-        document.getElementById('objective-text').innerText = lvl.desc;
-        currentMoney = lvl.budget;
+    function updateSlotInfo() {
+        for(let i=1; i<=3; i++) {
+            const data = localStorage.getItem('poly_save_' + i);
+            const infoDiv = document.getElementById(`slot-${i}-info`);
+            if(data) {
+                const parsed = JSON.parse(data);
+                infoDiv.innerText = `Salvo: ${parsed.date} \n (${parsed.linksCount} vigas)`;
+                infoDiv.style.color = "var(--accent)";
+            } else {
+                infoDiv.innerText = "Vazio - Toque para criar";
+            }
+        }
+    }
+
+    function loadSandbox(slotId) {
+        isSandbox = true;
+        currentSlot = slotId;
+        
+        document.getElementById('slot-screen').classList.add('hidden');
+        document.getElementById('ui-layer').classList.remove('hidden');
+        document.getElementById('btn-save').classList.remove('hidden'); // Show Save
+        
+        initGame();
+        
+        // Setup UI Sandbox
+        document.getElementById('mode-badge').innerText = "SANDBOX";
+        document.getElementById('objective-text').innerText = "Construção Livre";
+        currentMoney = 999999; 
         updateUI();
 
-        // Reset Engine
-        simulating = false;
-        loadFactor = 0;
-        survivalTime = 0;
+        // Tentar carregar dados
+        const savedData = localStorage.getItem('poly_save_' + slotId);
+        
+        // Limpar cenário base primeiro
+        resetToTerrain(800, 0); // Vão grande padrão
+
+        if(savedData) {
+            deserializeWorld(savedData);
+            showToast("Mundo Carregado!", "var(--success)");
+        } else {
+            showToast("Novo Mundo Criado", "var(--accent)");
+        }
+    }
+
+    // --- SISTEMA DE SAVE/LOAD (SERIALIZAÇÃO) ---
+
+    function saveWorld() {
+        if(!isSandbox) return;
+        
+        // Precisamos salvar as referências dos links baseados em índices
+        const serializableLinks = links.map(l => {
+            return {
+                idxA: nodes.indexOf(l.a),
+                idxB: nodes.indexOf(l.b)
+            };
+        });
+
+        const saveData = {
+            date: new Date().toLocaleDateString(),
+            linksCount: links.length,
+            nodes: nodes.map(n => ({x: n.iniX, y: n.iniY, fixed: n.fixed})), // Salva pos inicial
+            links: serializableLinks
+        };
+
+        localStorage.setItem('poly_save_' + currentSlot, JSON.stringify(saveData));
+        showToast("Progresso Salvo!", "var(--success)");
+    }
+
+    function deserializeWorld(json) {
+        const data = JSON.parse(json);
+        
         nodes = [];
         links = [];
 
-        // Build Terrain based on Level Config
-        const cx = width / 2;
-        const cy = height / 2;
-        const halfGap = lvl.gapWidth / 2;
+        // 1. Recriar Nós
+        data.nodes.forEach(n => {
+            nodes.push(new Node(n.x, n.y, n.fixed));
+        });
 
-        // Esquerda (Y Base)
-        nodes.push(new Node(cx - halfGap, cy + 50, true));
-        nodes.push(new Node(cx - halfGap, cy - 50, true));
+        // 2. Recriar Links usando índices
+        data.links.forEach(l => {
+            if(nodes[l.idxA] && nodes[l.idxB]) {
+                links.push(new Link(nodes[l.idxA], nodes[l.idxB]));
+            }
+        });
+    }
 
-        // Direita (Y Base + Diff)
-        const dy = lvl.heightDiff;
-        nodes.push(new Node(cx + halfGap, cy + 50 + dy, true));
-        nodes.push(new Node(cx + halfGap, cy - 50 + dy, true));
+    // --- GAME LOOP & LOGIC ---
+
+    function initGame() {
+        resize();
+        window.addEventListener('resize', resize);
+        // Prevent Mobile Scroll
+        document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        loop();
+    }
+
+    function resetToTerrain(gap, dy) {
+        simulating = false; loadFactor = 0; nodes = []; links = [];
+        const cx = width/2; const cy = height/2; const hg = gap/2;
+        // Left
+        nodes.push(new Node(cx-hg, cy+50, true));
+        nodes.push(new Node(cx-hg, cy-50, true));
+        // Right
+        nodes.push(new Node(cx+hg, cy+50+dy, true));
+        nodes.push(new Node(cx+hg, cy-50+dy, true));
+    }
+
+    function loadLevel(idx) {
+        if(idx >= LEVELS.length) idx = 0;
+        currentLevelIdx = idx;
+        const lvl = LEVELS[idx];
+        
+        document.getElementById('mode-badge').innerText = lvl.name;
+        document.getElementById('objective-text').innerText = lvl.desc;
+        currentMoney = lvl.budget;
+        updateUI();
+        resetToTerrain(lvl.gap, lvl.dy);
     }
 
     function resetLevel() {
-        simulating = false;
-        loadFactor = 0;
-        survivalTime = 0;
-        document.getElementById('timer-bar').style.width = '0%';
-        
-        // Restaurar posições
-        nodes.forEach(n => { n.x = n.oldX = n.iniX; n.y = n.oldY = n.iniY; });
-        links.forEach(l => { l.broken = false; l.stress = 0; });
+        if(isSandbox) {
+            // No sandbox, limpar remove tudo que não é fixo
+            nodes = nodes.filter(n => n.fixed);
+            links = [];
+        } else {
+            // Na campanha, reseta posição
+            simulating = false; loadFactor = 0; survivalTime = 0;
+            document.getElementById('timer-bar').style.width = '0%';
+            nodes.forEach(n => { n.x = n.oldX = n.iniX; n.y = n.oldY = n.iniY; });
+            links.forEach(l => { l.broken = false; l.stress = 0; });
+        }
         updateUI();
     }
 
+    // --- NOVA FUNÇÃO: UNDO (REMOÇÃO) ---
+    function undoLast() {
+        if(simulating) return;
+        if(links.length > 0) {
+            // Remove a última viga criada
+            const removedLink = links.pop();
+            
+            // Opcional: Remover nós que ficaram órfãos (se não forem fixos)
+            // Checa se nodeA ainda tem conexões
+            const nodeAUsed = links.some(l => l.a === removedLink.a || l.b === removedLink.a);
+            const nodeBUsed = links.some(l => l.a === removedLink.b || l.b === removedLink.b);
+
+            // Se o nó não é fixo e não tem mais conexões, remove
+            if(!removedLink.a.fixed && !nodeAUsed) {
+                nodes = nodes.filter(n => n !== removedLink.a);
+            }
+            if(!removedLink.b.fixed && !nodeBUsed) {
+                nodes = nodes.filter(n => n !== removedLink.b);
+            }
+            
+            if(!isSandbox) currentMoney += ((removedLink.rest/PPM) * COST_PER_METER);
+            updateUI();
+        }
+    }
+
     function nextLevel() {
-        document.getElementById('victory-modal').style.display = 'none';
+        document.getElementById('victory-modal').classList.add('hidden');
         loadLevel(currentLevelIdx + 1);
     }
 
     function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-        if(!simulating) loadLevel(currentLevelIdx); // Recalcular posições
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
     }
 
     // --- INPUT ---
     function getClosest(x, y) {
-        let best = null;
-        let min = SNAP_DIST;
+        let best = null; let min = SNAP_DIST;
         for(let n of nodes) {
             let d = Math.hypot(n.x - x, n.y - y);
             if(d < min) { min = d; best = n; }
@@ -454,163 +537,137 @@
         return best;
     }
 
-    // Input handlers unificados
-    const startInput = (x, y) => {
-        if(simulating) return;
-        const snap = getClosest(x, y);
-        if(snap) { dragStart = snap; isDragging = true; currentPos = {x, y}; }
-    };
+    const inputHandlers = {
+        start: (x,y) => {
+            if(simulating) return;
+            const snap = getClosest(x,y);
+            if(snap) { dragStart = snap; isDragging = true; currentPos = {x,y}; }
+        },
+        move: (x,y) => {
+            currentPos = {x,y};
+            const snap = getClosest(x,y);
+            if(snap) currentPos = {x: snap.x, y: snap.y};
+        },
+        end: () => {
+            if(!isDragging || !dragStart) { isDragging = false; return; }
+            let endNode = getClosest(currentPos.x, currentPos.y);
+            if(!endNode) endNode = new Node(currentPos.x, currentPos.y, false);
+            
+            const dist = Math.hypot(endNode.x - dragStart.x, endNode.y - dragStart.y);
+            const cost = (dist/PPM) * COST_PER_METER;
 
-    const moveInput = (x, y) => {
-        currentPos = {x, y};
-        const snap = getClosest(x, y);
-        if(snap) currentPos = {x: snap.x, y: snap.y};
-    };
-
-    const endInput = () => {
-        if(!isDragging || !dragStart) { isDragging = false; return; }
-        
-        let endNode = getClosest(currentPos.x, currentPos.y);
-        if(!endNode) endNode = new Node(currentPos.x, currentPos.y, false);
-
-        const dist = Math.hypot(endNode.x - dragStart.x, endNode.y - dragStart.y);
-        const distM = dist / PPM;
-        const cost = distM * COST_PER_METER;
-
-        if(dist > 10 && distM < 8 && dragStart !== endNode) {
-            if(currentMoney >= cost) {
-                if(!nodes.includes(endNode)) nodes.push(endNode);
-                
-                const exists = links.some(l => (l.a === dragStart && l.b === endNode) || (l.a === endNode && l.b === dragStart));
-                
-                if(!exists) {
-                    links.push(new Link(dragStart, endNode));
-                    currentMoney -= cost;
+            if(dist > 10 && (dist/PPM < 8) && dragStart !== endNode) {
+                // Checa dinheiro (Sempre true no Sandbox)
+                if(isSandbox || currentMoney >= cost) {
+                    if(!nodes.includes(endNode)) nodes.push(endNode);
+                    const exists = links.some(l => (l.a === dragStart && l.b === endNode) || (l.a === endNode && l.b === dragStart));
+                    if(!exists) {
+                        links.push(new Link(dragStart, endNode));
+                        if(!isSandbox) currentMoney -= cost;
+                    }
+                } else {
+                    showToast("SEM FUNDOS!", "var(--danger)");
                 }
-            } else {
-                showToast();
             }
+            updateUI();
+            isDragging = false; dragStart = null;
         }
-        updateUI();
-        isDragging = false; dragStart = null;
     };
 
-    canvas.addEventListener('mousedown', e => startInput(e.clientX, e.clientY));
-    canvas.addEventListener('mousemove', e => moveInput(e.clientX, e.clientY));
-    canvas.addEventListener('mouseup', endInput);
-    
-    canvas.addEventListener('touchstart', e => startInput(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
-    canvas.addEventListener('touchmove', e => moveInput(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
-    canvas.addEventListener('touchend', endInput);
+    // Eventos Mouse/Touch
+    canvas.addEventListener('mousedown', e => inputHandlers.start(e.clientX, e.clientY));
+    canvas.addEventListener('mousemove', e => inputHandlers.move(e.clientX, e.clientY));
+    canvas.addEventListener('mouseup', inputHandlers.end);
+    canvas.addEventListener('touchstart', e => inputHandlers.start(e.touches[0].clientX, e.touches[0].clientY), {passive:false});
+    canvas.addEventListener('touchmove', e => inputHandlers.move(e.touches[0].clientX, e.touches[0].clientY), {passive:false});
+    canvas.addEventListener('touchend', inputHandlers.end);
 
     // --- UI HELPERS ---
     function updateUI() {
-        document.getElementById('money-display').innerText = "$" + currentMoney.toFixed(0);
+        document.getElementById('money-display').innerText = isSandbox ? "∞" : "$" + currentMoney.toFixed(0);
         const btn = document.getElementById('btn-sim');
         if(simulating) {
-            btn.innerText = "PARAR";
-            btn.classList.add('danger');
+            btn.innerText = "PARAR"; btn.classList.add('danger');
         } else {
-            btn.innerText = "SIMULAR";
-            btn.classList.remove('danger');
+            btn.innerText = "SIMULAR"; btn.classList.remove('danger');
         }
     }
 
-    function showToast() {
+    function showToast(msg, color) {
         const t = document.getElementById('toast');
-        t.style.opacity = '1';
-        setTimeout(() => t.style.opacity = '0', 1500);
+        t.innerText = msg; t.style.color = color; t.style.borderColor = color;
+        t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 1500);
     }
 
     function toggleSim() {
         if(!simulating) {
+            // Save state for reset
             nodes.forEach(n => { n.iniX = n.x; n.iniY = n.y; n.oldX = n.x; n.oldY = n.y; });
-            simulating = true;
-            loadFactor = 0;
-            survivalTime = 0;
+            simulating = true; loadFactor = 0; survivalTime = 0;
         } else {
-            resetLevel();
+            // Restore
+            simulating = false;
+            document.getElementById('timer-bar').style.width = '0%';
+            nodes.forEach(n => { n.x = n.oldX = n.iniX; n.y = n.oldY = n.iniY; });
+            links.forEach(l => { l.broken = false; l.stress = 0; });
         }
         updateUI();
     }
 
     // --- RENDER LOOP ---
     function loop() {
-        ctx.fillStyle = '#0b0c10';
-        ctx.fillRect(0,0,width,height);
+        ctx.fillStyle = '#0b0c10'; ctx.fillRect(0,0,width,height);
         
         // Grid
-        ctx.strokeStyle = 'rgba(69, 162, 158, 0.05)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(69, 162, 158, 0.05)'; ctx.lineWidth = 1; ctx.beginPath();
         for(let x=0; x<width; x+=40) { ctx.moveTo(x,0); ctx.lineTo(x,height); }
         for(let y=0; y<height; y+=40) { ctx.moveTo(0,y); ctx.lineTo(width,y); }
         ctx.stroke();
 
         // Terrain
         if(nodes.length > 0) {
-            const lvl = LEVELS[currentLevelIdx];
-            // Left Terrain
-            ctx.fillStyle = '#1f2833';
-            ctx.fillRect(0, 0, nodes[0].x, height);
-            
-            // Right Terrain
-            ctx.fillRect(nodes[2].x, 0, width, height);
+            // Assume first 2 are left anchors, next 2 are right anchors (simplified logic)
+            // Em mundos complexos, desenharíamos polígonos, mas aqui usamos retângulos baseados nas ancoras
+            const leftX = nodes.find(n => n.fixed && n.x < width/2)?.x || 0;
+            const rightX = nodes.find(n => n.fixed && n.x > width/2)?.x || width;
 
-            // Neon Borders
-            ctx.strokeStyle = '#45a29e';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(nodes[0].x, 0); ctx.lineTo(nodes[0].x, height);
-            ctx.moveTo(nodes[2].x, 0); ctx.lineTo(nodes[2].x, height);
+            ctx.fillStyle = '#1f2833';
+            ctx.fillRect(0, 0, leftX, height);
+            ctx.fillRect(rightX, 0, width, height);
+            
+            ctx.strokeStyle = '#45a29e'; ctx.lineWidth = 3; ctx.beginPath();
+            ctx.moveTo(leftX, 0); ctx.lineTo(leftX, height);
+            ctx.moveTo(rightX, 0); ctx.lineTo(rightX, height);
             ctx.stroke();
         }
 
-        // Logic
         if(simulating) {
             if(loadFactor < 1) loadFactor += 0.01;
-            
             let brokenCount = 0;
             for(let i=0; i<10; i++) {
                 links.forEach(l => { l.update(); if(l.broken) brokenCount++; });
                 nodes.forEach(n => n.update());
             }
-
-            // Victory Check
-            if(brokenCount === 0 && loadFactor >= 1) {
+            if(brokenCount === 0 && loadFactor >= 1 && !isSandbox) {
                 survivalTime++;
-                const progress = (survivalTime / TARGET_TIME) * 100;
-                document.getElementById('timer-bar').style.width = progress + '%';
-                
-                if(survivalTime >= TARGET_TIME) {
-                    simulating = false;
-                    document.getElementById('victory-modal').style.display = 'flex';
-                }
-            } else if (brokenCount > 0) {
-                document.getElementById('timer-bar').style.backgroundColor = 'var(--danger)';
+                document.getElementById('timer-bar').style.width = (survivalTime/300)*100 + '%';
+                if(survivalTime >= 300) { simulating = false; document.getElementById('victory-modal').classList.remove('hidden'); }
             }
         }
 
-        // Draw
         links.forEach(l => l.draw());
         
         if(isDragging && dragStart) {
-            ctx.beginPath();
-            ctx.moveTo(dragStart.x, dragStart.y);
-            ctx.lineTo(currentPos.x, currentPos.y);
-            
+            ctx.beginPath(); ctx.moveTo(dragStart.x, dragStart.y); ctx.lineTo(currentPos.x, currentPos.y);
             const dist = Math.hypot(dragStart.x - currentPos.x, dragStart.y - currentPos.y);
             const cost = (dist/PPM) * COST_PER_METER;
-            const valid = currentMoney >= cost && dist/PPM < 8;
-
+            const valid = (isSandbox || currentMoney >= cost) && dist/PPM < 8;
             ctx.strokeStyle = valid ? 'var(--accent)' : 'var(--danger)';
-            ctx.setLineDash([5,5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = "12px sans-serif";
-            ctx.fillText(`$${cost.toFixed(0)}`, currentPos.x+15, currentPos.y);
+            ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
+            if(!isSandbox) {
+                ctx.fillStyle = '#fff'; ctx.font = "12px sans-serif";
+                ctx.fillText(`$${cost.toFixed(0)}`, currentPos.x+15, currentPos.y);
+            }
         }
 
         nodes.forEach(n => {
