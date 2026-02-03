@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poly-Engineer: Structure Master</title>
+    <title>Poly-Structure: Campaign Mode</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
 
         :root {
             --bg-color: #0b0c10;
-            --grid-line: rgba(69, 162, 158, 0.1);
-            --accent: #66fcf1; /* Ciano Neon */
+            --accent: #66fcf1;
             --accent-dim: #45a29e;
             --danger: #ff1e56;
-            --success: #c5c6c7;
-            --glass: rgba(11, 12, 16, 0.85);
+            --success: #00e676;
+            --glass: rgba(11, 12, 16, 0.9);
             --font-main: 'Rajdhani', sans-serif;
         }
 
@@ -26,10 +25,9 @@
             font-family: var(--font-main);
             touch-action: none;
             user-select: none;
-            -webkit-user-select: none;
         }
 
-        /* --- UI LAYER --- */
+        /* --- UI ELEMENTS --- */
         #ui-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -40,96 +38,60 @@
             z-index: 10;
         }
 
-        /* Top Bar */
-        .hud-panel {
+        .hud-top {
             background: var(--glass);
-            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--accent-dim);
-            padding: 15px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             pointer-events: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
-        .stat-group { display: flex; flex-direction: column; }
-        .stat-label { font-size: 0.75rem; letter-spacing: 2px; color: #888; text-transform: uppercase; }
-        .stat-value { 
-            font-size: 1.5rem; 
-            font-weight: 700; 
-            color: var(--accent);
-            text-shadow: 0 0 10px rgba(102, 252, 241, 0.4);
+        .level-badge {
+            background: var(--accent);
+            color: #000;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: inline-block;
         }
 
-        /* Bottom Controls */
-        .controls-area {
+        .stat-value { font-size: 1.4rem; font-weight: 700; text-shadow: 0 0 10px rgba(102, 252, 241, 0.3); }
+        .stat-label { font-size: 0.7rem; color: #888; letter-spacing: 1px; }
+
+        .controls {
             padding: 20px;
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             pointer-events: auto;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
         }
 
-        /* Buttons */
         button {
             font-family: var(--font-main);
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
             color: var(--accent);
             border: 1px solid var(--accent);
-            padding: 12px 30px;
+            padding: 12px 25px;
             font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            transition: 0.2s;
             clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
-
-        button:hover {
-            background: var(--accent);
-            color: #0b0c10;
-            box-shadow: 0 0 20px var(--accent-dim);
-            transform: translateY(-2px);
-        }
-
+        button:hover { background: var(--accent); color: #000; transform: translateY(-2px); }
         button:active { transform: scale(0.95); }
+        button.danger { border-color: var(--danger); color: var(--danger); }
+        button.danger:hover { background: var(--danger); color: white; }
 
-        button.danger { 
-            border-color: var(--danger); 
-            color: var(--danger); 
-        }
-        button.danger:hover {
-            background: var(--danger);
-            color: white;
-            box-shadow: 0 0 20px var(--danger);
-        }
-
-        /* Overlay Messages */
-        #message-box {
-            position: absolute;
-            top: 20%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 30, 86, 0.1);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            text-shadow: 0 0 10px var(--danger);
-            z-index: 20;
-        }
-
-        /* Start Screen */
-        #start-screen {
+        /* SCREENS & MODALS */
+        .overlay-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(11, 12, 16, 0.95);
@@ -141,28 +103,36 @@
             transition: opacity 0.5s;
         }
         
-        h1 {
-            font-size: 3rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px var(--accent);
+        .title { font-size: 3rem; margin: 0; letter-spacing: 5px; text-shadow: 0 0 20px var(--accent); }
+        .subtitle { color: #888; margin-top: 5px; letter-spacing: 2px; }
+        
+        #victory-modal {
+            display: none;
+            background: rgba(0, 230, 118, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .victory-text { color: var(--success); font-size: 2.5rem; text-shadow: 0 0 20px var(--success); }
+        
+        #timer-bar {
+            width: 0%; height: 4px;
+            background: var(--success);
+            position: absolute;
+            top: 0; left: 0;
+            transition: width 0.1s linear;
         }
 
-        .start-btn {
-            margin-top: 30px;
-            padding: 20px 60px;
-            font-size: 1.5rem;
-            background: var(--accent);
-            color: #000;
-            border: none;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(102, 252, 241, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(102, 252, 241, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(102, 252, 241, 0); }
+        /* Message Toast */
+        #toast {
+            position: absolute; top: 20%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 30, 86, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 8px 20px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+            font-weight: bold;
         }
 
         canvas { display: block; }
@@ -172,30 +142,40 @@
 
 <audio id="bgm" loop>
     <source src="bdg.mp3" type="audio/mpeg">
-    </audio>
+</audio>
 
-<div id="start-screen">
-    <h1>Poly-Structure</h1>
-    <p style="color: #888;">PROTOCOLO DE ENGENHARIA V.3.0</p>
-    <button class="start-btn" onclick="startGame()">INICIAR SISTEMA</button>
+<div id="start-screen" class="overlay-screen">
+    <h1 class="title">POLY-STRUCTURE</h1>
+    <p class="subtitle">CAMPAIGN MODE V1.0</p>
+    <div style="margin-top: 40px; font-size: 0.9rem; color: #666;">
+        🎧 Áudio Híbrido: MP3 ou Sintetizador Neural
+    </div>
+    <button onclick="startGame()" style="margin-top: 20px; width: 200px;">INICIAR SISTEMA</button>
+</div>
+
+<div id="victory-modal" class="overlay-screen">
+    <h1 class="victory-text">ESTRUTURA ESTÁVEL</h1>
+    <p style="color: #fff; margin-bottom: 30px;">Teste de carga aprovado.</p>
+    <button onclick="nextLevel()" style="border-color: var(--success); color: var(--success);">PRÓXIMO NÍVEL >></button>
 </div>
 
 <div id="ui-layer">
-    <div class="hud-panel">
-        <div class="stat-group">
-            <span class="stat-label">ORÇAMENTO</span>
-            <span id="money-display" class="stat-value">$100.00</span>
+    <div class="hud-top">
+        <div>
+            <div id="level-display" class="level-badge">NÍVEL 1</div>
+            <div class="stat-label">OBJETIVO: <span id="objective-text" style="color:#fff">Vencer o vão</span></div>
         </div>
-        <div class="stat-group" style="text-align: right;">
-            <span class="stat-label">SISTEMA</span>
-            <span id="status-display" style="color:var(--accent);">ONLINE</span>
+        <div style="text-align: right;">
+            <div class="stat-value" id="money-display">$0</div>
+            <div class="stat-label">ORÇAMENTO</div>
         </div>
     </div>
+    
+    <div id="timer-bar"></div>
+    <div id="toast">FUNDOS INSUFICIENTES</div>
 
-    <div id="message-box">FUNDO INSUFICIENTE</div>
-
-    <div class="controls-area">
-        <button onclick="resetGame()" class="danger">ABORTAR</button>
+    <div class="controls">
+        <button onclick="resetLevel()" class="danger">RESET</button>
         <button onclick="toggleSim()" id="btn-sim">SIMULAR</button>
     </div>
 </div>
@@ -203,34 +183,113 @@
 <canvas id="gameCanvas"></canvas>
 
 <script>
-    // --- SETUP GERAL ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const moneyDisplay = document.getElementById('money-display');
-    const statusDisplay = document.getElementById('status-display');
-    const msgBox = document.getElementById('message-box');
-    const audio = document.getElementById('bgm');
+    // --- ENGINE DE ÁUDIO SINTÉTICO (Fallback) ---
+    // Se o MP3 não carregar, isso cria um som ambiente Sci-Fi usando o chip de som do navegador
+    class AudioEngine {
+        constructor() {
+            this.ctx = window.AudioContext ? new AudioContext() : null;
+            this.oscillators = [];
+            this.mp3Element = document.getElementById('bgm');
+            this.usingSynth = false;
+        }
 
-    // Constantes Físicas & Econômicas
+        start() {
+            if (!this.ctx) return;
+            
+            // Tenta tocar o MP3 primeiro
+            this.mp3Element.volume = 0.4;
+            let playPromise = this.mp3Element.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("MP3 falhou (provavelmente caminho local). Iniciando Sintetizador...");
+                    this.startSynth();
+                });
+            }
+        }
+
+        startSynth() {
+            this.usingSynth = true;
+            // Drone grave (Pad)
+            this.createOscillator(55, 'sawtooth', 0.05); 
+            this.createOscillator(56, 'sine', 0.1); 
+            // Som agudo etéreo
+            this.createOscillator(220, 'sine', 0.02);
+            
+            // LFO para movimento
+            console.log("Audio Sintético Ativo");
+        }
+
+        createOscillator(freq, type, vol) {
+            const osc = this.ctx.createOscillator();
+            const gainNode = this.ctx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            
+            gainNode.gain.setValueAtTime(vol, this.ctx.currentTime);
+            
+            osc.connect(gainNode);
+            gainNode.connect(this.ctx.destination);
+            osc.start();
+            this.oscillators.push(osc);
+        }
+    }
+
+    // --- CONFIGURAÇÃO DE FASES ---
+    const LEVELS = [
+        {
+            id: 1,
+            name: "NÍVEL 1: O INÍCIO",
+            budget: 150,
+            gapWidth: 300,
+            heightDiff: 0, // Chão plano
+            desc: "Construa uma ponte simples para cruzar o vão."
+        },
+        {
+            id: 2,
+            name: "NÍVEL 2: O CANYON",
+            budget: 400,
+            gapWidth: 500, // Vão largo
+            heightDiff: 0,
+            desc: "O vão é maior. Use treliças (triângulos) para suporte."
+        },
+        {
+            id: 3,
+            name: "NÍVEL 3: A FALHA",
+            budget: 600,
+            gapWidth: 400,
+            heightDiff: 80, // Lado direito mais baixo
+            desc: "Terreno desnivelado. Adapte a estrutura."
+        }
+    ];
+
+    // --- VARIÁVEIS DO JOGO ---
     const PPM = 40; 
     const GRAVITY = 9.81;
-    const STARTING_MONEY = 100;
-    const COST_PER_METER = 5; 
-    const SNAP_DIST = 35; // Área de toque aumentada
+    const COST_PER_METER = 5;
+    const SNAP_DIST = 30;
+    
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const audioSys = new AudioEngine();
 
-    // Variáveis de Estado
+    let currentLevelIdx = 0;
     let width, height;
     let nodes = [];
     let links = [];
     let simulating = false;
     let loadFactor = 0;
-    let currentMoney = STARTING_MONEY;
+    let currentMoney = 0;
+    let survivalTime = 0; // Tempo que a estrutura aguentou
+    const TARGET_TIME = 300; // 5 segundos (60 frames * 5)
+
+    // Input
     let dragStart = null;
     let currentPos = {x:0, y:0};
     let isDragging = false;
-    let gameStarted = false;
 
-    // --- CLASSES COM VISUAL MELHORADO ---
+    // --- CLASSES ---
     class Node {
         constructor(x, y, fixed) {
             this.x = x; this.y = y;
@@ -238,36 +297,24 @@
             this.iniX = x; this.iniY = y;
             this.fixed = fixed;
         }
-        
         update() {
             if(this.fixed) return;
             const vx = (this.x - this.oldX) * 0.98;
             const vy = (this.y - this.oldY) * 0.98;
             this.oldX = this.x; this.oldY = this.y;
             this.x += vx; this.y += vy;
-            // Gravidade suavizada
-            this.y += (GRAVITY * PPM * 0.00028) * loadFactor; 
+            this.y += (GRAVITY * PPM * 0.00028) * loadFactor;
         }
-
-        draw(isActive) {
-            // Brilho do Nó
-            ctx.shadowBlur = isActive ? 15 : 0;
-            ctx.shadowColor = 'var(--accent)';
-            
+        draw(active) {
             ctx.beginPath();
             if(this.fixed) {
-                // Design de Âncora (Parafuso Hexagonal)
                 ctx.fillStyle = '#ff1e56';
-                drawHexagon(ctx, this.x, this.y, 8);
+                ctx.fillRect(this.x-6, this.y-6, 12, 12); // Quadrado
             } else {
-                // Design de Junta (Círculo Tech)
-                ctx.fillStyle = isActive ? '#ffffff' : '#45a29e';
-                ctx.arc(this.x, this.y, isActive ? 6 : 4, 0, Math.PI*2);
+                ctx.fillStyle = active ? '#fff' : '#45a29e';
+                ctx.arc(this.x, this.y, 5, 0, Math.PI*2);
             }
             ctx.fill();
-            
-            // Reset Shadow para performance
-            ctx.shadowBlur = 0;
         }
     }
 
@@ -278,7 +325,6 @@
             this.stress = 0;
             this.broken = false;
         }
-
         update() {
             if(this.broken) return;
             const dx = this.b.x - this.a.x;
@@ -287,108 +333,106 @@
             const diff = (d - this.rest) / this.rest;
             this.stress = diff;
 
-            if(Math.abs(diff) > 0.20) this.broken = true; 
+            // Quebra com 25% de deformação
+            if(Math.abs(diff) > 0.25) this.broken = true; 
 
-            const k = 0.5 * diff;
+            const k = 0.5 * diff; 
             const ox = dx * k;
             const oy = dy * k;
 
             if(!this.a.fixed) { this.a.x += ox; this.a.y += oy; }
             if(!this.b.fixed) { this.b.x -= ox; this.b.y -= oy; }
         }
-
         draw() {
             if(this.broken) return;
             
-            // Visualização de Stress Neon
-            let color = '#45a29e'; // Base Cyan
-            let alpha = 0.6;
-            let width = 3;
-            let shadowColor = 'transparent';
-            let shadowBlur = 0;
-
+            let color = '#45a29e';
+            let lw = 2;
+            
             if(simulating) {
-                const s = this.stress;
-                const absS = Math.abs(s);
-                
-                if(s > 0) { // Tração (Esticando - Azul/Branco)
-                    const intensity = Math.min(absS * 5, 1);
-                    color = `rgba(${100 + 155*intensity}, 252, 241, ${0.6 + 0.4*intensity})`;
-                    width = 2;
-                } else { // Compressão (Esmagando - Vermelho/Laranja)
-                    const intensity = Math.min(absS * 5, 1);
-                    color = `rgba(255, ${255 * (1-intensity)}, 86, ${0.8 + 0.2*intensity})`;
-                    width = 3 + intensity * 3;
-                    
-                    if(intensity > 0.8) { // Warning Glow
-                        shadowColor = '#ff1e56';
-                        shadowBlur = 15;
-                    }
+                if(this.stress > 0) { // Tração
+                    color = `rgba(100, 255, 255, ${0.5 + this.stress*2})`;
+                } else { // Compressão
+                    let red = Math.min(255, Math.abs(this.stress) * 1000);
+                    color = `rgb(255, ${255-red}, 100)`;
+                    lw = 2 + Math.abs(this.stress)*10;
                 }
             }
-
-            ctx.save();
-            ctx.shadowBlur = shadowBlur;
-            ctx.shadowColor = shadowColor;
+            
             ctx.beginPath();
             ctx.moveTo(this.a.x, this.a.y);
             ctx.lineTo(this.b.x, this.b.y);
             ctx.strokeStyle = color;
-            ctx.lineWidth = width;
-            ctx.lineCap = 'round';
+            ctx.lineWidth = lw;
             ctx.stroke();
-            ctx.restore();
         }
     }
 
-    // --- FUNÇÕES AUXILIARES DE DESENHO ---
-    function drawHexagon(ctx, x, y, r) {
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-            ctx.lineTo(x + r * Math.cos(i * Math.PI / 3), y + r * Math.sin(i * Math.PI / 3));
-        }
-        ctx.closePath();
-        ctx.fill();
-    }
+    // --- GAMEPLAY FLOW ---
 
-    function drawGrid() {
-        // Grid Tecnológico de Fundo
-        ctx.strokeStyle = 'rgba(69, 162, 158, 0.05)';
-        ctx.lineWidth = 1;
-        
-        // Movimento sutil do grid (Opcional, mas bonito)
-        const offset = (Date.now() / 50) % 40; 
-        
-        ctx.beginPath();
-        for(let x = 0; x < width; x += 40) {
-            ctx.moveTo(x, 0); ctx.lineTo(x, height);
-        }
-        for(let y = 0; y < height; y += 40) {
-            ctx.moveTo(0, y); ctx.lineTo(width, y);
-        }
-        ctx.stroke();
-    }
-
-    // --- SISTEMA ---
     function startGame() {
-        const screen = document.getElementById('start-screen');
-        screen.style.opacity = '0';
-        setTimeout(() => screen.style.display = 'none', 500);
-        gameStarted = true;
-        
-        // Iniciar Audio (Requer interação do usuário)
-        audio.volume = 0.5; // 50% volume
-        audio.play().catch(e => console.log("Audio play failed:", e));
-        
+        document.getElementById('start-screen').style.display = 'none';
+        audioSys.start();
         init();
     }
 
     function init() {
         resize();
         window.addEventListener('resize', resize);
+        // Prevenir scroll mobile
         document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-        resetGame();
+        loadLevel(0);
         loop();
+    }
+
+    function loadLevel(idx) {
+        if(idx >= LEVELS.length) idx = 0; // Loop ou tela final
+        currentLevelIdx = idx;
+        const lvl = LEVELS[idx];
+
+        // UI Updates
+        document.getElementById('level-display').innerText = lvl.name;
+        document.getElementById('objective-text').innerText = lvl.desc;
+        currentMoney = lvl.budget;
+        updateUI();
+
+        // Reset Engine
+        simulating = false;
+        loadFactor = 0;
+        survivalTime = 0;
+        nodes = [];
+        links = [];
+
+        // Build Terrain based on Level Config
+        const cx = width / 2;
+        const cy = height / 2;
+        const halfGap = lvl.gapWidth / 2;
+
+        // Esquerda (Y Base)
+        nodes.push(new Node(cx - halfGap, cy + 50, true));
+        nodes.push(new Node(cx - halfGap, cy - 50, true));
+
+        // Direita (Y Base + Diff)
+        const dy = lvl.heightDiff;
+        nodes.push(new Node(cx + halfGap, cy + 50 + dy, true));
+        nodes.push(new Node(cx + halfGap, cy - 50 + dy, true));
+    }
+
+    function resetLevel() {
+        simulating = false;
+        loadFactor = 0;
+        survivalTime = 0;
+        document.getElementById('timer-bar').style.width = '0%';
+        
+        // Restaurar posições
+        nodes.forEach(n => { n.x = n.oldX = n.iniX; n.y = n.oldY = n.iniY; });
+        links.forEach(l => { l.broken = false; l.stress = 0; });
+        updateUI();
+    }
+
+    function nextLevel() {
+        document.getElementById('victory-modal').style.display = 'none';
+        loadLevel(currentLevelIdx + 1);
     }
 
     function resize() {
@@ -396,47 +440,10 @@
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
-        if(!simulating && gameStarted) resetGame();
+        if(!simulating) loadLevel(currentLevelIdx); // Recalcular posições
     }
 
-    function resetGame() {
-        simulating = false;
-        loadFactor = 0;
-        currentMoney = STARTING_MONEY;
-        nodes = [];
-        links = [];
-        updateUI();
-
-        // Cenário Responsivo
-        const gap = Math.min(width * 0.6, 500);
-        const cx = width / 2;
-        const cy = height / 2;
-        
-        nodes.push(new Node(cx - gap/2, cy + 60, true));
-        nodes.push(new Node(cx - gap/2, cy - 60, true));
-        
-        nodes.push(new Node(cx + gap/2, cy + 60, true));
-        nodes.push(new Node(cx + gap/2, cy - 60, true));
-    }
-
-    function updateUI() {
-        moneyDisplay.innerText = "$" + currentMoney.toFixed(2);
-        
-        const btn = document.getElementById('btn-sim');
-        if(simulating) {
-            btn.innerText = "PARAR";
-            btn.classList.add('danger');
-            statusDisplay.innerText = "TESTANDO...";
-            statusDisplay.style.color = "var(--danger)";
-        } else {
-            btn.innerText = "SIMULAR";
-            btn.classList.remove('danger');
-            statusDisplay.innerText = "ONLINE";
-            statusDisplay.style.color = "var(--accent)";
-        }
-    }
-
-    // --- INPUT (TOUCH/MOUSE) ---
+    // --- INPUT ---
     function getClosest(x, y) {
         let best = null;
         let min = SNAP_DIST;
@@ -447,36 +454,30 @@
         return best;
     }
 
-    function handleStart(x, y) {
+    // Input handlers unificados
+    const startInput = (x, y) => {
         if(simulating) return;
         const snap = getClosest(x, y);
-        if(snap) {
-            dragStart = snap;
-            isDragging = true;
-            currentPos = {x, y};
-        }
-    }
+        if(snap) { dragStart = snap; isDragging = true; currentPos = {x, y}; }
+    };
 
-    function handleMove(x, y) {
+    const moveInput = (x, y) => {
         currentPos = {x, y};
         const snap = getClosest(x, y);
         if(snap) currentPos = {x: snap.x, y: snap.y};
-    }
+    };
 
-    function handleEnd() {
+    const endInput = () => {
         if(!isDragging || !dragStart) { isDragging = false; return; }
         
         let endNode = getClosest(currentPos.x, currentPos.y);
-        
-        if(!endNode) {
-            endNode = new Node(currentPos.x, currentPos.y, false);
-        }
+        if(!endNode) endNode = new Node(currentPos.x, currentPos.y, false);
 
         const dist = Math.hypot(endNode.x - dragStart.x, endNode.y - dragStart.y);
         const distM = dist / PPM;
         const cost = distM * COST_PER_METER;
 
-        if(dist > 10 && distM < 6 && dragStart !== endNode) {
+        if(dist > 10 && distM < 8 && dragStart !== endNode) {
             if(currentMoney >= cost) {
                 if(!nodes.includes(endNode)) nodes.push(endNode);
                 
@@ -487,114 +488,134 @@
                     currentMoney -= cost;
                 }
             } else {
-                showMsg();
+                showToast();
             }
         }
-        
         updateUI();
-        isDragging = false;
-        dragStart = null;
+        isDragging = false; dragStart = null;
+    };
+
+    canvas.addEventListener('mousedown', e => startInput(e.clientX, e.clientY));
+    canvas.addEventListener('mousemove', e => moveInput(e.clientX, e.clientY));
+    canvas.addEventListener('mouseup', endInput);
+    
+    canvas.addEventListener('touchstart', e => startInput(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
+    canvas.addEventListener('touchmove', e => moveInput(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
+    canvas.addEventListener('touchend', endInput);
+
+    // --- UI HELPERS ---
+    function updateUI() {
+        document.getElementById('money-display').innerText = "$" + currentMoney.toFixed(0);
+        const btn = document.getElementById('btn-sim');
+        if(simulating) {
+            btn.innerText = "PARAR";
+            btn.classList.add('danger');
+        } else {
+            btn.innerText = "SIMULAR";
+            btn.classList.remove('danger');
+        }
     }
 
-    function showMsg() {
-        msgBox.style.opacity = '1';
-        msgBox.style.top = '20%'; // leve animação
-        setTimeout(() => {
-            msgBox.style.opacity = '0';
-        }, 1500);
+    function showToast() {
+        const t = document.getElementById('toast');
+        t.style.opacity = '1';
+        setTimeout(() => t.style.opacity = '0', 1500);
     }
 
-    // Event Listeners
-    canvas.addEventListener('mousedown', e => handleStart(e.clientX, e.clientY));
-    canvas.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
-    canvas.addEventListener('mouseup', handleEnd);
-
-    canvas.addEventListener('touchstart', e => handleStart(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
-    canvas.addEventListener('touchmove', e => handleMove(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
-    canvas.addEventListener('touchend', handleEnd);
-
-    // --- GAME LOOP ---
     function toggleSim() {
         if(!simulating) {
-            // Save state
             nodes.forEach(n => { n.iniX = n.x; n.iniY = n.y; n.oldX = n.x; n.oldY = n.y; });
             simulating = true;
             loadFactor = 0;
+            survivalTime = 0;
         } else {
-            // Restore state
-            simulating = false;
-            nodes.forEach(n => { n.x = n.oldX = n.iniX; n.y = n.oldY = n.iniY; });
-            links.forEach(l => { l.broken = false; l.stress = 0; });
+            resetLevel();
         }
         updateUI();
     }
 
+    // --- RENDER LOOP ---
     function loop() {
-        if(!gameStarted) return; // Espera clicar no Start
-
-        // Limpa com transparência para efeito de rastro leve (opcional) ou sólido
-        ctx.fillStyle = '#0b0c10'; 
+        ctx.fillStyle = '#0b0c10';
         ctx.fillRect(0,0,width,height);
         
-        drawGrid();
+        // Grid
+        ctx.strokeStyle = 'rgba(69, 162, 158, 0.05)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let x=0; x<width; x+=40) { ctx.moveTo(x,0); ctx.lineTo(x,height); }
+        for(let y=0; y<height; y+=40) { ctx.moveTo(0,y); ctx.lineTo(width,y); }
+        ctx.stroke();
 
-        // Terreno (Design Clean)
+        // Terrain
         if(nodes.length > 0) {
+            const lvl = LEVELS[currentLevelIdx];
+            // Left Terrain
             ctx.fillStyle = '#1f2833';
-            const leftX = nodes[0].x; 
-            const rightX = nodes[2].x;
+            ctx.fillRect(0, 0, nodes[0].x, height);
             
-            // Penhascos
-            ctx.fillRect(0, 0, leftX, height);
-            ctx.fillRect(rightX, 0, width-rightX, height);
-            
-            // Linha de Borda Neon
-            ctx.strokeStyle = 'var(--accent-dim)';
-            ctx.lineWidth = 2;
+            // Right Terrain
+            ctx.fillRect(nodes[2].x, 0, width, height);
+
+            // Neon Borders
+            ctx.strokeStyle = '#45a29e';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(leftX, 0); ctx.lineTo(leftX, height);
-            ctx.moveTo(rightX, 0); ctx.lineTo(rightX, height);
+            ctx.moveTo(nodes[0].x, 0); ctx.lineTo(nodes[0].x, height);
+            ctx.moveTo(nodes[2].x, 0); ctx.lineTo(nodes[2].x, height);
             ctx.stroke();
         }
 
-        // Simulação Física
+        // Logic
         if(simulating) {
-            if(loadFactor < 1) loadFactor += 0.005;
+            if(loadFactor < 1) loadFactor += 0.01;
+            
+            let brokenCount = 0;
             for(let i=0; i<10; i++) {
-                links.forEach(l => l.update());
+                links.forEach(l => { l.update(); if(l.broken) brokenCount++; });
                 nodes.forEach(n => n.update());
+            }
+
+            // Victory Check
+            if(brokenCount === 0 && loadFactor >= 1) {
+                survivalTime++;
+                const progress = (survivalTime / TARGET_TIME) * 100;
+                document.getElementById('timer-bar').style.width = progress + '%';
+                
+                if(survivalTime >= TARGET_TIME) {
+                    simulating = false;
+                    document.getElementById('victory-modal').style.display = 'flex';
+                }
+            } else if (brokenCount > 0) {
+                document.getElementById('timer-bar').style.backgroundColor = 'var(--danger)';
             }
         }
 
-        // Renderização
+        // Draw
         links.forEach(l => l.draw());
         
-        // Preview da Linha
         if(isDragging && dragStart) {
-            const dist = Math.hypot(dragStart.x - currentPos.x, dragStart.y - currentPos.y);
-            const distM = dist / PPM;
-            const cost = distM * COST_PER_METER;
-            const canAfford = currentMoney >= cost;
-
             ctx.beginPath();
             ctx.moveTo(dragStart.x, dragStart.y);
             ctx.lineTo(currentPos.x, currentPos.y);
-            ctx.strokeStyle = canAfford ? 'var(--accent)' : 'var(--danger)';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
+            
+            const dist = Math.hypot(dragStart.x - currentPos.x, dragStart.y - currentPos.y);
+            const cost = (dist/PPM) * COST_PER_METER;
+            const valid = currentMoney >= cost && dist/PPM < 8;
+
+            ctx.strokeStyle = valid ? 'var(--accent)' : 'var(--danger)';
+            ctx.setLineDash([5,5]);
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Custo flutuante (Estilo HUD)
-            ctx.fillStyle = canAfford ? '#fff' : 'var(--danger)';
-            ctx.font = "bold 14px 'Rajdhani', sans-serif";
-            ctx.fillText(`$${cost.toFixed(2)}`, currentPos.x + 15, currentPos.y - 15);
+            ctx.fillStyle = '#fff';
+            ctx.font = "12px sans-serif";
+            ctx.fillText(`$${cost.toFixed(0)}`, currentPos.x+15, currentPos.y);
         }
 
         nodes.forEach(n => {
-            const isActive = (n === dragStart) || 
-                             (Math.hypot(n.x - currentPos.x, n.y - currentPos.y) < SNAP_DIST);
-            n.draw(isActive);
+            const active = (n === dragStart) || (Math.hypot(n.x - currentPos.x, n.y - currentPos.y) < SNAP_DIST);
+            n.draw(active);
         });
 
         requestAnimationFrame(loop);
